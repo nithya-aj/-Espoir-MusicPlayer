@@ -32,4 +32,32 @@ const deletSong = async (req, res) => {
     res.status(200).send({ message: " Song deleted successfully!" })
 }
 
-module.exports = { createSong, getAllSongs, updateSong, deletSong } 
+// like song
+const likeSong = async (req, res) => {
+    let resMessage = ""
+    const song = await Song.findById(req.params.id);
+    console.log(song, "song object");
+    if (!song) return res.status(400).send({ message: "Song doesn't exit" })
+
+    const user = await User.findById(req.user._id)
+    const index = user.likedSongs.indexOf(song._id)
+    console.log(`this song is in the position ${index}`);
+    if (index === -1) {
+        user.likedSongs.push(song._id)
+        resMessage = "Song added to your liked songs"
+    } else {
+        user.likedSongs.splice(index, 1)
+        resMessage = "Song removed from your liked songs"
+    }
+    await user.save()
+    res.status(200).send({ message: resMessage })
+}
+
+// get all liked songs
+const allLikedSongs = async (req, res) => {
+    const user = await User.findById(req.user._id)
+    const songs = await Song.find({ _id: user.likedSongs })
+    return res.status(200).send({ data: songs })
+}
+
+module.exports = { createSong, getAllSongs, updateSong, deletSong, likeSong, allLikedSongs } 
